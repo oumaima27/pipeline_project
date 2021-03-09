@@ -12,5 +12,4 @@ public class SpringbootSwaggerCrudApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SpringbootSwaggerCrudApplication.class, args);
 	}
-
 }
