@@ -1,0 +1,47 @@
+stages:
+  - build
+  - test
+  - liquibase
+  - deploy
+
+variables:
+  MAVEN_CLI_OPTS: "-B -DskipTests"
+  SPRING_PROFILES_ACTIVE: "prod"
+
+cache:
+  paths:
+    - .m2/repository
+
+build:
+  stage: build
+  image: maven:3.8.5-openjdk-17
+  script:
+    - mvn $MAVEN_CLI_OPTS clean package
+  artifacts:
+    paths:
+      - target/*.jar
+
+test:
+  stage: test
+  image: maven:3.8.5-openjdk-17
+  script:
+    - mvn test
+
+liquibase:
+  stage: liquibase
+  image: maven:3.8.5-openjdk-17
+  script:
+    - mvn liquibase:update -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE
+
+deploy:
+  stage: deploy
+  image: openjdk:17
+  script:
+    - java -jar target/ton-projet.jar
+  only:
+    - main
+migrate:
+  stage: migrate
+  image: maven:3.8.5-openjdk-11
+  script:
+    - mvn liquibase:update
