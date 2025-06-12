@@ -6,4 +6,4 @@
    - http://localhost:8080/swagger-ui.html#/
 
 
-   hello my dearest frien
+   hello my dearest friends
