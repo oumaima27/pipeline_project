@@ -20,8 +20,8 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean install
-        working-directory: springboot-swagger-crud/springboot-swagger-crud
+        working-directory: springboot-swagger-crud
 
       - name: Run Liquibase update
         run: mvn liquibase:update
-        working-directory: springboot-swagger-crud/springboot-swagger-crud
+        working-directory: springboot-swagger-crud
