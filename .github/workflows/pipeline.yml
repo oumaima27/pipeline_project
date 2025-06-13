@@ -1,9 +1,13 @@
-name: CI/CD Pipeline
+name: CI/CD with Liquibase
 
 on: [push]
 
+env:
+  SPRING_PROFILES_ACTIVE: "pipeline"
+  LIQUIBASE_CHANGELOG: "src/main/resources/db/changelog/db.changelog-master.xml"
+
 jobs:
-  build-and-test:
+  build-and-migrate:
     runs-on: ubuntu-latest
 
     services:
@@ -25,16 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Find and navigate to project directory
-        run: |
-          # Find the deepest pom.xml (adjust depth if needed)
-          PROJECT_DIR=$(find . -name pom.xml -printf '%h\n' | sort -n | head -1)
-          echo "Found project directory at: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-          echo "Current directory: $(pwd)"
-          ls -la
-          echo "::set-output name=project_dir::$PROJECT_DIR"
-        id: locate_project
+      - name: Navigate to project
+        run: cd springboot-swagger-crud/springboot-swagger-crud
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -42,30 +38,26 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Make Maven Wrapper executable
-        run: chmod +x mvnw
-        working-directory: ${{ steps.locate_project.outputs.project_dir }}
-
-      - name: Wait for MySQL
-        run: |
-          for i in {1..10}; do
-            if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
-              break
-            fi
-            sleep 5
-          done
-          sleep 3
-
       - name: Build with Maven
-        run: ./mvnw -B clean install -Dspring-boot.run.profiles=pipeline
-        working-directory: ${{ steps.locate_project.outputs.project_dir }}
+        run: ./mvnw -B clean package -DskipTests
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false
           SPRING_DATASOURCE_USERNAME: appuser
           SPRING_DATASOURCE_PASSWORD: apppassword
 
-      - name: Verify Database Access
+      - name: Run Liquibase migrations
         run: |
-          mysql --host=127.0.0.1 --user=root --password=rootpassword123 -e "SHOW DATABASES;"
-          mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "SHOW GRANTS FOR appuser;"
-          mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "USE oumaima; SHOW TABLES;"
+          ./mvnw liquibase:update \
+            -Dspring.profiles.active=pipeline \
+            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/oumaima \
+            -Dliquibase.username=appuser \
+            -Dliquibase.password=apppassword \
+            -Dliquibase.changeLogFile=$LIQUIBASE_CHANGELOG
+
+      - name: Verify database state
+        run: |
+          mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "
+            USE oumaima;
+            SELECT * FROM DATABASECHANGELOG;
+            SHOW TABLES;
+          "
