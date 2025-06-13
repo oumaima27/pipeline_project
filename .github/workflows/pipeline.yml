@@ -4,12 +4,14 @@ on: [push]
 
 env:
   DB_NAME: oumaima
+  DB_HOST: 127.0.0.1  # Must use 127.0.0.1 in GitHub Actions
   DB_USER: appuser
   DB_PASSWORD: apppassword
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     services:
       mysql:
@@ -23,16 +25,14 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -uappuser -papppassword"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+          --health-interval=5s
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Navigate to project directory
+      - name: Navigate to project
         run: |
-          cd springboot-swagger-crud
+          cd springboot-swagger-crud/springboot-swagger-crud
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
           ls -la
 
@@ -42,34 +42,35 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Make Maven Wrapper executable
-        run: chmod +x mvnw
-        working-directory: ${{ env.PROJECT_DIR }}
-
-      - name: Initialize Database
+      - name: Configure MySQL permissions
         run: |
-          for i in {1..10}; do
+          for i in {1..15}; do
             if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
               mysql -h127.0.0.1 -uroot -prootpassword123 -e "
-                CREATE DATABASE IF NOT EXISTS oumaima;
-                GRANT ALL PRIVILEGES ON oumaima.* TO 'appuser'@'%';
+                ALTER USER 'appuser'@'%' IDENTIFIED WITH mysql_native_password BY 'apppassword';
+                GRANT ALL ON oumaima.* TO 'appuser'@'%';
                 FLUSH PRIVILEGES;
               "
               break
             fi
-            sleep 3
+            sleep 2
           done
 
-      - name: Run Liquibase Migrations
+      - name: Verify DB connection
+        run: |
+          mysql -h127.0.0.1 -uappuser -papppassword -e "SHOW DATABASES;"
+
+      - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           ./mvnw liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false \
             -Dliquibase.username=appuser \
             -Dliquibase.password=apppassword \
+            -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml
 
-      - name: Build and Test
+      - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           ./mvnw clean install -Dspring-boot.run.profiles=pipeline
@@ -78,11 +79,10 @@ jobs:
           SPRING_DATASOURCE_USERNAME: appuser
           SPRING_DATASOURCE_PASSWORD: apppassword
 
-      - name: Verify Database
-        working-directory: ${{ env.PROJECT_DIR }}
+      - name: Verify migrations
         run: |
           mysql -h127.0.0.1 -uappuser -papppassword -e "
             USE oumaima;
             SHOW TABLES;
-            SELECT id, author, filename FROM DATABASECHANGELOG;
+            SELECT id, author, filename, dateexecuted FROM DATABASECHANGELOG;
           "
