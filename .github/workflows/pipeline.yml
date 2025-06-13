@@ -17,12 +17,25 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+        ports:
+          - 3306:3306  # Expose MySQL port
 
     steps:
       - uses: actions/checkout@v3
 
+      # Set up Java (required for Maven)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Navigate to the correct directory (if your project is nested)
+      - name: Change directory to project
+        run: cd springboot-swagger-crud  # Adjust this if your `pom.xml` is in a subfolder
+
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn clean install -B
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/oumaima
           SPRING_DATASOURCE_USERNAME: root

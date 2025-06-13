@@ -6,12 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="782cbb2c-aeda-4937-b8f2-db85a2cd06a9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.github/workflows/pipeline.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/pipeline.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/springboot-swagger-crud.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/springboot-swagger-crud.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/springboot-swagger-crud/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/springboot-swagger-crud/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/springboot-swagger-crud/src/test/java/com/springswagger/SpringbootSwaggerCrudApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/springboot-swagger-crud/src/test/java/com/springswagger/SpringbootSwaggerCrudApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,6 +34,10 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
@@ -65,7 +64,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749817962148</updated>
-      <workItem from="1749817969996" duration="293000" />
+      <workItem from="1749817969996" duration="757000" />
     </task>
     <servers />
   </component>
