@@ -2,6 +2,12 @@ name: CI/CD Pipeline
 
 on: [push]
 
+env:
+  DB_NAME: oumaima
+  DB_HOST: 127.0.0.1  # Use 127.0.0.1 instead of localhost
+  DB_USER: appuser
+  DB_PASSWORD: apppassword
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -11,30 +17,19 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: rootpassword123
-          MYSQL_DATABASE: oumaima
-          MYSQL_USER: appuser
-          MYSQL_PASSWORD: apppassword
+          MYSQL_DATABASE: ${{ env.DB_NAME }}
+          MYSQL_USER: ${{ env.DB_USER }}
+          MYSQL_PASSWORD: ${{ env.DB_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -uroot -prootpassword123"
+          --health-cmd="mysqladmin ping -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Find and navigate to project directory
-        run: |
-          # Find the deepest pom.xml (adjust depth if needed)
-          PROJECT_DIR=$(find . -name pom.xml -printf '%h\n' | sort -n | head -1)
-          echo "Found project directory at: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-          echo "Current directory: $(pwd)"
-          ls -la
-          echo "::set-output name=project_dir::$PROJECT_DIR"
-        id: locate_project
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -42,52 +37,33 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Make Maven Wrapper executable
-        run: chmod +x mvnw
-        working-directory: ${{ steps.locate_project.outputs.project_dir }}
-
-      - name: Wait for MySQL
+      - name: Configure MySQL permissions
         run: |
           for i in {1..10}; do
             if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
+              mysql -h127.0.0.1 -uroot -prootpassword123 -e "
+                CREATE DATABASE IF NOT EXISTS ${{ env.DB_NAME }};
+                GRANT ALL PRIVILEGES ON ${{ env.DB_NAME }}.* TO '${{ env.DB_USER }}'@'%';
+                FLUSH PRIVILEGES;
+              "
               break
             fi
-            sleep 5
+            sleep 3
           done
-          sleep 3
 
       - name: Run Liquibase Migrations
-        working-directory: ${{ steps.locate_project.outputs.project_dir }}
         run: |
           ./mvnw liquibase:update \
-            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false \
-            -Dliquibase.username=appuser \
-            -Dliquibase.password=apppassword \
+            -Dliquibase.url=jdbc:mysql://${{ env.DB_HOST }}:3306/${{ env.DB_NAME }}?useSSL=false \
+            -Dliquibase.username=${{ env.DB_USER }} \
+            -Dliquibase.password=${{ env.DB_PASSWORD }} \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
-            -Dliquibase.logLevel=debug
+            -Dliquibase.driver=com.mysql.cj.jdbc.Driver
 
-      - name: Verify Migrations
-        working-directory: ${{ steps.locate_project.outputs.project_dir }}
+      - name: Build and test
         run: |
-          mysql -h127.0.0.1 -uappuser -papppassword -e "
-            USE oumaima;
-            SHOW TABLES;
-            SELECT id, author, filename, dateexecuted 
-            FROM DATABASECHANGELOG 
-            ORDER BY dateexecuted DESC;
-          "
-
-      - name: Build with Maven
-        working-directory: ${{ steps.locate_project.outputs.project_dir }}
-        run: ./mvnw -B clean install -Dspring-boot.run.profiles=pipeline
+          ./mvnw clean install -Dspring-boot.run.profiles=pipeline
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
-          SPRING_DATASOURCE_USERNAME: appuser
-          SPRING_DATASOURCE_PASSWORD: apppassword
-
-      - name: Verify Database Access
-        working-directory: ${{ steps.locate_project.outputs.project_dir }}
-        run: |
-          mysql --host=127.0.0.1 --user=root --password=rootpassword123 -e "SHOW DATABASES;"
-          mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "SHOW GRANTS FOR appuser;"
-          mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "USE oumaima; SHOW TABLES;"
+          SPRING_DATASOURCE_URL: jdbc:mysql://${{ env.DB_HOST }}:3306/${{ env.DB_NAME }}?useSSL=false
+          SPRING_DATASOURCE_USERNAME: ${{ env.DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ env.DB_PASSWORD }}
