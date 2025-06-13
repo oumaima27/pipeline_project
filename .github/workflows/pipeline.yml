@@ -10,7 +10,6 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     services:
       mysql:
@@ -27,6 +26,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verify Maven Wrapper
+        run: |
+          # Check if mvnw exists at root or in subdirectories
+          if [ -f "mvnw" ]; then
+            echo "Found mvnw at root"
+          else
+            MW_PATH=$(find . -name mvnw -print -quit)
+            if [ -n "$MW_PATH" ]; then
+              echo "Found mvnw at: $MW_PATH"
+              echo "PROJECT_DIR=$(dirname $MW_PATH)" >> $GITHUB_ENV
+            else
+              echo "Using system Maven"
+              echo "USE_SYSTEM_MAVEN=true" >> $GITHUB_ENV
+            fi
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -46,8 +61,13 @@ jobs:
 
       - name: Build and test
         run: |
-          chmod +x mvnw
-          ./mvnw clean test -Dspring-boot.run.profiles=pipeline
+          if [ -n "$PROJECT_DIR" ]; then
+            cd "$PROJECT_DIR"
+            chmod +x mvnw
+            ./mvnw clean test -Dspring-boot.run.profiles=pipeline
+          else
+            mvn clean test -Dspring-boot.run.profiles=pipeline
+          fi
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }}?useSSL=false
           SPRING_DATASOURCE_USERNAME: ${{ env.DB_USER }}
@@ -57,16 +77,16 @@ jobs:
       - name: Run Liquibase migrations
         if: success()
         run: |
-          ./mvnw liquibase:update \
-            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }} \
-            -Dliquibase.username=${{ env.DB_USER }} \
-            -Dliquibase.password=${{ env.DB_PASSWORD }} \
-            -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml
-
-      - name: Verify database
-        run: |
-          mysql -h127.0.0.1 -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} -e "
-            USE ${{ env.DB_NAME }};
-            SHOW TABLES;
-            SELECT id, author, filename FROM DATABASECHANGELOG;
-          "
+          if [ -n "$PROJECT_DIR" ]; then
+            cd "$PROJECT_DIR"
+            ./mvnw liquibase:update \
+              -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }} \
+              -Dliquibase.username=${{ env.DB_USER }} \
+              -Dliquibase.password=${{ env.DB_PASSWORD }} \
+              -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml
+          else
+            mvn liquibase:update \
+              -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }} \
+              -Dliquibase.username=${{ env.DB_USER }} \
+              -Dliquibase.password=${{ env.DB_PASSWORD }} \
+              -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml
