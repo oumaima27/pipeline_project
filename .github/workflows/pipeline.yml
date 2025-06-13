@@ -12,9 +12,8 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: rootpassword123
           MYSQL_DATABASE: oumaima
-          MYSQL_USER: root
-          MYSQL_PASSWORD: rootpassword123
-          MYSQL_ROOT_HOST: '%'  # Moved inside the existing env section
+          # Remove MYSQL_USER and MYSQL_PASSWORD for root
+          # Keep only root password configuration
         ports:
           - 3306:3306
         options: >-
