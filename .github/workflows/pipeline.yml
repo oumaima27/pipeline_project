@@ -1,9 +1,13 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline with Liquibase
 
 on: [push]
 
+env:
+  DB_NAME: oumaima
+  LIQUIBASE_CHANGELOG: "src/main/resources/db/changelog/db.changelog-master.xml"
+
 jobs:
-  build-and-test:
+  build-test-migrate:
     runs-on: ubuntu-latest
 
     services:
@@ -11,7 +15,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: rootpassword123
-          MYSQL_DATABASE: oumaima
+          MYSQL_DATABASE: ${{ env.DB_NAME }}
           MYSQL_USER: appuser
           MYSQL_PASSWORD: apppassword
         ports:
@@ -25,50 +29,62 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Locate project directory
+        id: locate_project
+        run: |
+          PROJECT_DIR=$(find . -name pom.xml -printf '%h\n' | sort -n | head -1)
+          echo "PROJECT_DIR=${PROJECT_DIR}" >> $GITHUB_OUTPUT
+          echo "Found project at: ${PROJECT_DIR}"
+          ls -la "${PROJECT_DIR}/src/main/resources/db/changelog/"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Wait for MySQL to be ready
+      - name: Wait for MySQL
         run: |
-          for i in {1..10}; do
+          for i in {1..15}; do
             if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
               echo "MySQL is ready!"
               break
             fi
-            echo "Waiting for MySQL... Attempt $i"
-            sleep 5
+            echo "Waiting for MySQL... (Attempt ${i})"
+            sleep 3
           done
+          sleep 2  # Additional buffer
 
-      - name: Build with Maven
-        run: ./mvnw -B clean package -DskipTests
+      - name: Build application
+        working-directory: ${{ steps.locate_project.outputs.PROJECT_DIR }}
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests -Dspring-boot.run.profiles=pipeline
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }}?useSSL=false
           SPRING_DATASOURCE_USERNAME: appuser
           SPRING_DATASOURCE_PASSWORD: apppassword
 
-      - name: Run Tests with Database
-        run: ./mvnw test
+      - name: Run Tests
+        working-directory: ${{ steps.locate_project.outputs.PROJECT_DIR }}
+        run: |
+          ./mvnw test -Dspring.profiles.active=pipeline
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false
-          SPRING_DATASOURCE_USERNAME: appuser
-          SPRING_DATASOURCE_PASSWORD: apppassword
-          SPRING_JPA_HIBERNATE_DDL_AUTO: none  # Désactive la génération automatique du schéma
+          SPRING_JPA_HIBERNATE_DDL_AUTO: validate
 
-      - name: Run Liquibase migrations
+      - name: Execute Liquibase migrations
+        working-directory: ${{ steps.locate_project.outputs.PROJECT_DIR }}
         run: |
           ./mvnw liquibase:update \
-            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/oumaima \
+            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }} \
             -Dliquibase.username=appuser \
             -Dliquibase.password=apppassword \
-            -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml
+            -Dliquibase.changeLogFile=${{ env.LIQUIBASE_CHANGELOG }}
 
-      - name: Verify Database
+      - name: Verify Database State
         run: |
           mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "
-            USE oumaima;
+            USE ${{ env.DB_NAME }};
             SHOW TABLES;
-            SELECT * FROM DATABASECHANGELOG;
+            SELECT id, author, filename FROM DATABASECHANGELOG ORDER BY dateexecuted DESC;
           "
