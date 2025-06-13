@@ -57,12 +57,12 @@ jobs:
           sleep 3
 
       - name: Build with Maven
-        run: ./mvnw -B clean install -Dspring.profiles.active=pipeline
+        run: ./mvnw -B clean install -Dspring-boot.run.profiles=pipeline
         working-directory: ${{ steps.locate_project.outputs.project_dir }}
         env:
-            SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
-            SPRING_DATASOURCE_USERNAME: appuser
-            SPRING_DATASOURCE_PASSWORD: apppassword
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_USERNAME: appuser
+          SPRING_DATASOURCE_PASSWORD: apppassword
 
       - name: Verify Database Access
         run: |
