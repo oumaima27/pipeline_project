@@ -4,11 +4,12 @@ on: [push]
 
 env:
   DB_NAME: oumaima
-  LIQUIBASE_CHANGELOG: "src/main/resources/db/changelog/db.changelog-master.xml"
+  LIQUIBASE_CHANGELOG: "db/changelog/db.changelog-master.xml"
 
 jobs:
-  build-test-migrate:
+  build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       mysql:
@@ -24,17 +25,17 @@ jobs:
           --health-cmd="mysqladmin ping -uroot -prootpassword123"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=5
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Locate project directory
-        id: locate_project
+      - name: Find project directory
+        id: find_project
         run: |
           PROJECT_DIR=$(find . -name pom.xml -printf '%h\n' | sort -n | head -1)
           echo "PROJECT_DIR=${PROJECT_DIR}" >> $GITHUB_OUTPUT
-          echo "Found project at: ${PROJECT_DIR}"
+          echo "Using project directory: ${PROJECT_DIR}"
           ls -la "${PROJECT_DIR}/src/main/resources/db/changelog/"
 
       - name: Set up JDK 17
@@ -43,48 +44,61 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Wait for MySQL
+      - name: Verify MySQL connection
         run: |
-          for i in {1..15}; do
+          for i in {1..20}; do
             if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
               echo "MySQL is ready!"
+              mysql -h127.0.0.1 -uroot -prootpassword123 -e "CREATE DATABASE IF NOT EXISTS ${{ env.DB_NAME }};"
+              mysql -h127.0.0.1 -uroot -prootpassword123 -e "GRANT ALL ON ${{ env.DB_NAME }}.* TO 'appuser'@'%';"
               break
             fi
-            echo "Waiting for MySQL... (Attempt ${i})"
+            echo "Waiting for MySQL... (attempt ${i})"
             sleep 3
           done
-          sleep 2  # Additional buffer
 
       - name: Build application
-        working-directory: ${{ steps.locate_project.outputs.PROJECT_DIR }}
+        working-directory: ${{ steps.find_project.outputs.PROJECT_DIR }}
         run: |
           chmod +x mvnw
           ./mvnw clean package -DskipTests -Dspring-boot.run.profiles=pipeline
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }}?useSSL=false
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }}?useSSL=false&allowPublicKeyRetrieval=true
           SPRING_DATASOURCE_USERNAME: appuser
           SPRING_DATASOURCE_PASSWORD: apppassword
 
-      - name: Run Tests
-        working-directory: ${{ steps.locate_project.outputs.PROJECT_DIR }}
-        run: |
-          ./mvnw test -Dspring.profiles.active=pipeline
-        env:
-          SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-
-      - name: Execute Liquibase migrations
-        working-directory: ${{ steps.locate_project.outputs.PROJECT_DIR }}
+      - name: Run Liquibase migrations (before tests)
+        working-directory: ${{ steps.find_project.outputs.PROJECT_DIR }}
         run: |
           ./mvnw liquibase:update \
-            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }} \
+            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }}?useSSL=false \
             -Dliquibase.username=appuser \
             -Dliquibase.password=apppassword \
-            -Dliquibase.changeLogFile=${{ env.LIQUIBASE_CHANGELOG }}
+            -Dliquibase.changeLogFile=src/main/resources/${{ env.LIQUIBASE_CHANGELOG }}
 
-      - name: Verify Database State
+      - name: Run Tests with debug info
+        working-directory: ${{ steps.find_project.outputs.PROJECT_DIR }}
         run: |
-          mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "
+          ./mvnw test -Dspring.profiles.active=pipeline \
+                      -Dspring.datasource.url=jdbc:mysql://127.0.0.1:3306/${{ env.DB_NAME }}?useSSL=false \
+                      -Dspring.datasource.username=appuser \
+                      -Dspring.datasource.password=apppassword \
+                      -Dspring.jpa.hibernate.ddl-auto=validate \
+                      -e -X
+        if: always()
+
+      - name: Verify database state
+        run: |
+          mysql -h127.0.0.1 -uappuser -papppassword -e "
             USE ${{ env.DB_NAME }};
             SHOW TABLES;
-            SELECT id, author, filename FROM DATABASECHANGELOG ORDER BY dateexecuted DESC;
+            SELECT id, author, filename, dateexecuted FROM DATABASECHANGELOG ORDER BY dateexecuted DESC;
+            SHOW GRANTS FOR appuser;
           "
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: test-reports
+          path: ${{ steps.find_project.outputs.PROJECT_DIR }}/target/surefire-reports
