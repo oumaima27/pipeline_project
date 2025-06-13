@@ -32,7 +32,7 @@ jobs:
 
       - name: Navigate to project directory
         run: |
-          cd springboot-swagger-crud/springboot-swagger-crud
+          cd springboot-swagger-crud
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
           ls -la
 
