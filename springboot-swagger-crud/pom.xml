@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.0</version> <!-- Mis à jour pour Spring Boot 3.2.0 -->
+		<version>3.2.0</version>
 		<relativePath/>
 	</parent>
 
@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>8.1.0</version> <!-- Compatible avec Spring Boot 3 -->
+			<version>8.1.0</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -56,38 +56,48 @@
 			<artifactId>liquibase-core</artifactId>
 		</dependency>
 
-		<!-- Test -->
+		<!-- Springdoc OpenAPI pour Swagger UI -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+
+		<!-- Test (JUnit 5 inclus déjà) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-
-		<!-- Springdoc OpenAPI pour Swagger UI (compatible Spring Boot 3) -->
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.1.0</version> <!-- Vérifie la dernière version -->
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.13.2</version>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.9.3</version>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.9.3</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<!-- Plugin Spring Boot -->
+			<!-- Spring Boot Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
-			<!-- Plugin Maven Compiler -->
+			<!-- Maven Compiler -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -95,16 +105,10 @@
 				<configuration>
 					<source>17</source>
 					<target>17</target>
-					<compilerArgs>
-						<arg>--add-opens</arg>
-						<arg>jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
-						<arg>--add-opens</arg>
-						<arg>jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
-					</compilerArgs>
 				</configuration>
 			</plugin>
 
-			<!-- Plugin Liquibase -->
+			<!-- Liquibase Plugin -->
 			<plugin>
 				<groupId>org.liquibase</groupId>
 				<artifactId>liquibase-maven-plugin</artifactId>
