@@ -25,8 +25,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Navigate to project directory
-        run: cd springboot-swagger-crud/springboot-swagger-crud
+      - name: Find and navigate to project directory
+        run: |
+          # Find the deepest pom.xml (adjust depth if needed)
+          PROJECT_DIR=$(find . -name pom.xml -printf '%h\n' | sort -n | head -1)
+          echo "Found project directory at: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          echo "Current directory: $(pwd)"
+          ls -la
+          echo "::set-output name=project_dir::$PROJECT_DIR"
+        id: locate_project
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -36,7 +44,7 @@ jobs:
 
       - name: Make Maven Wrapper executable
         run: chmod +x mvnw
-        working-directory: springboot-swagger-crud/springboot-swagger-crud
+        working-directory: ${{ steps.locate_project.outputs.project_dir }}
 
       - name: Wait for MySQL
         run: |
@@ -50,7 +58,7 @@ jobs:
 
       - name: Build with Maven
         run: ./mvnw -B clean install -Dspring-boot.run.profiles=pipeline
-        working-directory: springboot-swagger-crud/springboot-swagger-crud
+        working-directory: ${{ steps.locate_project.outputs.project_dir }}
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
           SPRING_DATASOURCE_USERNAME: appuser
@@ -60,3 +68,4 @@ jobs:
         run: |
           mysql --host=127.0.0.1 --user=root --password=rootpassword123 -e "SHOW DATABASES;"
           mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "SHOW GRANTS FOR appuser;"
+          mysql --host=127.0.0.1 --user=appuser --password=apppassword -e "USE oumaima; SHOW TABLES;"
