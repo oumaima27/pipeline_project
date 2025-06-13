@@ -4,10 +4,10 @@ on: [push]
 
 env:
   DB_NAME: oumaima
-  DB_HOST: 127.0.0.1  # Must use 127.0.0.1 in GitHub Actions
+  DB_HOST: 127.0.0.1
   DB_USER: appuser
   DB_PASSWORD: apppassword
-  SPRING_PROFILES_ACTIVE: pipeline  # Activate pipeline profile
+  SPRING_PROFILES_ACTIVE: pipeline
 
 jobs:
   build-and-test:
@@ -19,13 +19,13 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: rootpassword123
-          MYSQL_DATABASE: ${{ env.DB_NAME }}
-          MYSQL_USER: ${{ env.DB_USER }}
-          MYSQL_PASSWORD: ${{ env.DB_PASSWORD }}
+          MYSQL_DATABASE: oumaima  # Hardcoded to match env.DB_NAME
+          MYSQL_USER: appuser     # Hardcoded to match env.DB_USER
+          MYSQL_PASSWORD: apppassword  # Hardcoded to match env.DB_PASSWORD
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}"
+          --health-cmd="mysqladmin ping -uappuser -papppassword"
           --health-interval=5s
 
     steps:
