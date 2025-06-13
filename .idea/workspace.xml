@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="782cbb2c-aeda-4937-b8f2-db85a2cd06a9" name="Changes" comment="" />
+    <list default="true" id="782cbb2c-aeda-4937-b8f2-db85a2cd06a9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/pipeline.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/pipeline.yml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -61,7 +63,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749817962148</updated>
-      <workItem from="1749817969996" duration="6714000" />
+      <workItem from="1749817969996" duration="6907000" />
     </task>
     <servers />
   </component>
