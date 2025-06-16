@@ -6,9 +6,8 @@
        http://www.liquibase.org/xml/ns/dbchangelog
        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <include file="db/changelog/01-create-person.xml"/>
-    <include file="db/changelog/02-add-age.xml"/>
-    <include file="db/changelog/03-create-address.xml"/>
-    <include file="db/changelog/04-add-phone.xml"/>
-
+    <include file="classpath:db/changelog/01-create-person.xml"/>
+    <include file="classpath:db/changelog/02-add-age.xml"/>
+    <include file="classpath:db/changelog/03-create-address.xml"/>
+    <include file="classpath:db/changelog/04-add-phone.xml"/>
 </databaseChangeLog>
