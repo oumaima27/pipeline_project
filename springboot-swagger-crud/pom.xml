@@ -114,7 +114,7 @@
 				<artifactId>liquibase-maven-plugin</artifactId>
 				<version>4.21.1</version>
 				<configuration>
-					<changeLogFile>src/main/resources/db/changelog/db.changelog-master.xml</changeLogFile>
+					<changeLogFile>db/changelog/db.changelog-master.xml</changeLogFile>
 					<url>jdbc:mysql://127.0.0.1:3306/oumaima</url>
 					<username>appuser</username>
 					<password>apppassword</password>
