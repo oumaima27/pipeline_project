@@ -90,6 +90,11 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
 		<plugins>
 			<!-- Spring Boot Plugin -->
 			<plugin>
@@ -114,7 +119,7 @@
 				<artifactId>liquibase-maven-plugin</artifactId>
 				<version>4.21.1</version>
 				<configuration>
-					<changeLogFile>db/changelog/db.changelog-master.xml</changeLogFile>
+					<changeLogFile>src/main/resources/db/changelog/db.changelog-master.xml</changeLogFile>
 					<url>jdbc:mysql://127.0.0.1:3306/oumaima</url>
 					<username>appuser</username>
 					<password>apppassword</password>
