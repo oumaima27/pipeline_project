@@ -70,15 +70,11 @@ jobs:
 
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
-        env:
-          SPRING_DATASOURCE_URL: ${{ env.SPRING_DATASOURCE_URL }}
-          SPRING_DATASOURCE_USERNAME: ${{ env.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ env.SPRING_DATASOURCE_PASSWORD }}
         run: |
           ./mvnw liquibase:update \
-            -Dliquibase.url=${SPRING_DATASOURCE_URL} \
-            -Dliquibase.username=${SPRING_DATASOURCE_USERNAME} \
-            -Dliquibase.password=${SPRING_DATASOURCE_PASSWORD} \
+            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false \
+            -Dliquibase.username=appuser \
+            -Dliquibase.password=apppassword \
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml
 
