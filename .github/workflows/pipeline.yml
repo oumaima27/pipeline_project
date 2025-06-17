@@ -102,9 +102,8 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           cat << 'EOF' > run_liquibase.sh
-        #!/bin/bash
-          set -e
-          
+          #!/bin/bash
+          set -e          
           echo "Running Liquibase migration..."
           OUTPUT=$(./mvnw liquibase:update \
           -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
