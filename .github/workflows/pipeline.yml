@@ -119,7 +119,7 @@ jobs:
               -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
               -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
               -Dliquibase.searchPath=src/main/resources
-          
+          fi
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
