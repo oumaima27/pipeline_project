@@ -102,31 +102,41 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           cat << 'EOF' > run_liquibase.sh
-          #!/bin/bash
+      #!/bin/bash
           set -e
 
           echo "Running Liquibase migration..."
-          OUTPUT=$(./mvnw liquibase:update \
-            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
-            -Dliquibase.username=${DB_USER} \
-            -Dliquibase.password=${DB_PASSWORD} \
-            -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
-            -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml \
-            -Dliquibase.searchPath=src/main/resources 2>&1)
+          echo "Listing current directory before running mvnw:"
+          ls -la
 
+          echo "DB_NAME: ${DB_NAME}"
+          echo "DB_USER: ${DB_USER}"
+          echo "Current directory: $(pwd)"
+          echo "Maven version:"
+          ./mvnw -v || true
+  
+          OUTPUT=$(./mvnw liquibase:update \
+          -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
+          -Dliquibase.username=${DB_USER} \
+          -Dliquibase.password=${DB_PASSWORD} \
+          -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
+          -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml \
+          -Dliquibase.searchPath=src/main/resources 2>&1)
+    
           echo "$OUTPUT"
 
-          if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
-            echo "::notice::Liquibase migration succeeded"
-            exit 0
+        if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
+          echo "::notice::Liquibase migration succeeded"
+          exit 0
           else
-            echo "::error::Liquibase migration failed"
-            exit 1
+          echo "::error::Liquibase migration failed"
+          exit 1
           fi
           EOF
-
+          
           chmod +x run_liquibase.sh
           ./run_liquibase.sh
+
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
