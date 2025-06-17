@@ -101,22 +101,23 @@ jobs:
           echo "PATH: $PATH"
           echo "JAVA_HOME: $JAVA_HOME"
           echo "Checking Java and Maven..."
-          
+
           java -version
           ./mvnw -v
-          
+
           echo "Running Liquibase migration..."
 
           OUTPUT=$(./mvnw liquibase:update \
-            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
-            -Dliquibase.username=${DB_USER} \
-            -Dliquibase.password=${DB_PASSWORD} \
+            -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
+            -Dliquibase.username="${DB_USER}" \
+            -Dliquibase.password="${DB_PASSWORD}" \
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
             -Dliquibase.searchPath=src/main/resources 2>&1)
-          EOF
-          echo "\$OUTPUT"
-          if echo "\$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
+
+          echo "$OUTPUT"
+
+          if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
             echo "::notice::Liquibase migration succeeded"
             exit 0
           else
@@ -124,8 +125,10 @@ jobs:
             exit 1
           fi
           EOF
+
           chmod +x run_liquibase.sh
           ./run_liquibase.sh
+      
       
       
       
