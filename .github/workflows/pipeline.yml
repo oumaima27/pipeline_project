@@ -92,7 +92,12 @@ jobs:
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          # Run with direct Maven and capture output
+          # Create a temporary script to avoid shell interpretation issues
+          cat << 'EOF' > run_liquibase.sh
+          #!/bin/bash
+          set -e
+
+          echo "Running Liquibase migration..."
           OUTPUT=$(mvn liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
             -Dliquibase.username=${DB_USER} \
@@ -103,14 +108,18 @@ jobs:
 
           echo "$OUTPUT"
 
-          # Check for success message in output
           if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
-            echo "Liquibase succeeded"
+            echo "::notice::Liquibase migration succeeded"
             exit 0
           else
-            echo "Liquibase failed"
+            echo "::error::Liquibase migration failed"
             exit 1
-          fi    
+          fi
+          EOF
+
+          # Make script executable and run it
+          chmod +x run_liquibase.sh
+          ./run_liquibase.sh    
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
@@ -126,5 +135,13 @@ jobs:
           mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "
             USE ${DB_NAME};
             SHOW TABLES;
-            SELECT id, author, filename, dateexecuted FROM DATABASECHANGELOG;
+            SELECT 
+              id, 
+              author, 
+              filename, 
+              dateexecuted,
+              MD5SUM,
+              CASE WHEN EXECTYPE = 'EXECUTED' THEN 'Success' ELSE 'Failed' END AS status
+            FROM DATABASECHANGELOG
+            ORDER BY dateexecuted DESC;
           "
