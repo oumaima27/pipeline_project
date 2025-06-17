@@ -14,6 +14,7 @@ env:
 
 jobs:
   build-and-test:
+    name: Build, Test & Migrate DB
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -32,21 +33,22 @@ jobs:
           --health-retries=10
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-      - name: Navigate to project
+      - name: Navigate to project folder and define PROJECT_DIR
         run: |
           cd springboot-swagger-crud
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
           ls -la
 
-      - name: Set up JDK 17
+      - name: Set up JDK 17 with Temurin
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Configure MySQL permissions
+      - name: Configure MySQL user and permissions
         run: |
           for i in {1..30}; do
             if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
@@ -66,30 +68,25 @@ jobs:
             sleep 3
           done
 
-      - name: Verify DB connection
+      - name: Verify MySQL DB connection and visibility
         run: |
           mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "SHOW DATABASES; USE ${DB_NAME}; SHOW TABLES;"
 
-      - name: Build project to copy resources
+      - name: Compile project (copy resources)
         working-directory: ${{ env.PROJECT_DIR }}
         run: ./mvnw clean compile
 
-      - name: Debug environment
+      - name: Debug system and project environment
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           echo "=== Environment Debug ==="
-          echo "Java version:"
           java -version
-          echo "Maven version:"
           ./mvnw -v || mvn -v
-          echo "Project structure:"
           ls -la
-          echo "Database files:"
           ls -la src/main/resources/db/changelog/
-          echo "Database connection test:"
           mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "SELECT 1" ${DB_NAME}
 
-      - name: Check mvnw availability
+      - name: Check mvnw file existence
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           ls -la
@@ -98,38 +95,35 @@ jobs:
             exit 1
           fi
 
-      - name: Run Liquibase migrations
+      - name: Run Liquibase database migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-            cat << 'EOF' > run_liquibase.sh
-            #!/bin/bash
-            set +e
-            
-            ./mvnw liquibase:update \
-              -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
-              -Dliquibase.username="${DB_USER}" \
-              -Dliquibase.password="${DB_PASSWORD}" \
-              -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
-              -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml \
-              -Dliquibase.searchPath=src/main/resources
-            
-            STATUS=$?
-            
-            if [ $STATUS -eq 0 ]; then
-              echo "::notice::Liquibase migration succeeded"
-              exit 0
-            else
-              echo "::error::Liquibase migration failed"
-              exit $STATUS
-            fi
-         EOF
-            chmod +x run_liquibase.sh
-            ./run_liquibase.sh
+          cat << 'EOF' > run_liquibase.sh
+#!/bin/bash
+          set +e
+          
+          ./mvnw liquibase:update \
+          -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
+          -Dliquibase.username="${DB_USER}" \
+          -Dliquibase.password="${DB_PASSWORD}" \
+          -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
+          -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml \
+          -Dliquibase.searchPath=src/main/resources
+  
+          STATUS=$?
+  
+          if [ $STATUS -eq 0 ]; then
+          echo "::notice::Liquibase migration succeeded"
+          exit 0
+          else
+          echo "::error::Liquibase migration failed"
+          exit $STATUS
+          fi
+          EOF
+          chmod +x run_liquibase.sh
+          ./run_liquibase.sh
 
-
-
-
-      - name: Build and test
+      - name: Build and run tests with Maven
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           ./mvnw clean install \
@@ -138,7 +132,7 @@ jobs:
             -Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME} \
             -Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
 
-      - name: Verify migrations
+      - name: Verify Liquibase changelog execution
         run: |
           mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "
             USE ${DB_NAME};
