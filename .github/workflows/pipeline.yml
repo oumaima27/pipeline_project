@@ -112,7 +112,7 @@ jobs:
             -Dliquibase.username="${DB_USER}" \
             -Dliquibase.password="${DB_PASSWORD}" \
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
-            -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
+            -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml \
             -Dliquibase.searchPath=src/main/resources 2>&1)
 
           echo "Liquibase output:"
