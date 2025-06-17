@@ -89,6 +89,15 @@ jobs:
           echo "Database connection test:"
           mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "SELECT 1" ${DB_NAME}
 
+      - name: Check mvnw availability
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          ls -la
+          if [ ! -f ./mvnw ]; then
+            echo "❌ mvnw not found!"
+            exit 1
+          fi
+
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
