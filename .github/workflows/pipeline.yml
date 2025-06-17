@@ -92,7 +92,6 @@ jobs:
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          # Create a temporary script to avoid shell interpretation issues
           cat << 'EOF' > run_liquibase.sh
           #!/bin/bash
           set -e
@@ -117,9 +116,11 @@ jobs:
           fi
           EOF
 
-          # Make script executable and run it
           chmod +x run_liquibase.sh
-          ./run_liquibase.sh    
+          ./run_liquibase.sh
+      
+      
+      
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
