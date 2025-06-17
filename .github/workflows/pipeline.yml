@@ -92,23 +92,25 @@ jobs:
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          # Simple direct execution that won't produce exit code 127
-          mvn liquibase:update \
+          # Run with direct Maven and capture output
+          OUTPUT=$(mvn liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
             -Dliquibase.username=${DB_USER} \
             -Dliquibase.password=${DB_PASSWORD} \
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
-            -Dliquibase.searchPath=src/main/resources
+            -Dliquibase.searchPath=src/main/resources 2>&1)
 
-          # Explicit success exit code to override any weirdness
-          exit 0
-      - name: Verify database state
-        run: |
-         mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} ${DB_NAME} -e "
-         SHOW TABLES;
-         SELECT * FROM DATABASECHANGELOG ORDER BY DATEEXECUTED DESC LIMIT 5;
-         "    
+          echo "$OUTPUT"
+
+          # Check for success message in output
+          if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
+            echo "Liquibase succeeded"
+            exit 0
+          else
+            echo "Liquibase failed"
+            exit 1
+          fi    
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
