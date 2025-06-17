@@ -81,7 +81,7 @@ jobs:
           echo "Project structure:"
           ls -la
           echo "Database files:"
-          ls -la src/main/resources/db/changelog/
+          ls -la db/changelog/
           echo "Database connection test:"
           mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "SELECT 1" ${DB_NAME}
       - name: Check mvnw availability
@@ -107,7 +107,8 @@ jobs:
 
           echo "Running Liquibase migration..."
 
-          OUTPUT=$(./mvnw liquibase:update \
+          mvn liquibase:update -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml
+
             -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
             -Dliquibase.username="${DB_USER}" \
             -Dliquibase.password="${DB_PASSWORD}" \
