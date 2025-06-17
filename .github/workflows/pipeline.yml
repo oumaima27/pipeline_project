@@ -98,7 +98,7 @@ jobs:
           set -e
 
           echo "Running Liquibase migration..."
-          OUTPUT=$(mvn liquibase:update \
+          OUTPUT=$(./mvnw liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
             -Dliquibase.username=${DB_USER} \
             -Dliquibase.password=${DB_PASSWORD} \
