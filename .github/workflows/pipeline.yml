@@ -92,51 +92,35 @@ jobs:
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          # Debug to show actual changelog location
-          echo "Looking for changelog files..."
-          find . -name "*.xml" | grep -i changelog || echo "No changelog files found"
-
-          # Create the script with corrected path
-          cat << 'EOF_SCRIPT' > run_liquibase.sh
+          cat << 'EOF' > run_liquibase.sh
           #!/bin/bash
-          set -ex
-          echo "Running Liquibase migration..."
 
-          # Try both possible paths for the changelog
-          CHANGELOG_PATH="src/main/resources/db/changelog/db.changelog-master.xml"
-          if [ ! -f "$CHANGELOG_PATH" ]; then
-            CHANGELOG_PATH="db/changelog/db.changelog-master.xml"
-          fi
+          echo "=== Running Liquibase Migration ==="
+          echo "Java version:"
+          java -version
+          echo "Maven version:"
+          ./mvnw -v
 
-          if [ ! -f "$CHANGELOG_PATH" ]; then
-            echo "::error::Changelog file not found at either location"
-            exit 1
-          fi
+          ./mvnw liquibase:update \
+            -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
+            -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
+            -Dliquibase.username="${DB_USER}" \
+            -Dliquibase.password="${DB_PASSWORD}" \
+            -Dliquibase.driver=com.mysql.cj.jdbc.Driver
 
-          echo "Using changelog at: $CHANGELOG_PATH"
-
-          OUTPUT=$(./mvnw liquibase:update \
-            -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
-            -Dliquibase.username=${DB_USER} \
-            -Dliquibase.password=${DB_PASSWORD} \
-            -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
-            -Dliquibase.changeLogFile=${CHANGELOG_PATH} \
-            -Dliquibase.searchPath=$(dirname ${CHANGELOG_PATH}) 2>&1)
-
-          echo "$OUTPUT"
-
-          if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
+          if [ $? -eq 0 ]; then
             echo "::notice::Liquibase migration succeeded"
             exit 0
           else
             echo "::error::Liquibase migration failed"
             exit 1
           fi
-          EOF_SCRIPT
+          EOF
 
           chmod +x run_liquibase.sh
           ./run_liquibase.sh
-       
+      
+      
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
