@@ -101,41 +101,33 @@ jobs:
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          cat << 'EOF' > run_liquibase.sh
-          #!/bin/bash
-          set +e
-  
-          ./mvnw liquibase:update \
-          -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
-          -Dliquibase.username="${DB_USER}" \
-          -Dliquibase.password="${DB_PASSWORD}" \
-          -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
-          -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml \
-          -Dliquibase.searchPath=src/main/resources
-          
-          STATUS=$?
-          
-          if [ $STATUS -eq 0 ]; then
-          echo "::notice::Liquibase migration succeeded"
-          exit 0
-          else
-          echo "::error::Liquibase migration failed"
-          exit $STATUS
-          fi
+            cat << 'EOF' > run_liquibase.sh
+            #!/bin/bash
+            set +e
+            
+            ./mvnw liquibase:update \
+              -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
+              -Dliquibase.username="${DB_USER}" \
+              -Dliquibase.password="${DB_PASSWORD}" \
+              -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
+              -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml \
+              -Dliquibase.searchPath=src/main/resources
+            
+            STATUS=$?
+            
+            if [ $STATUS -eq 0 ]; then
+              echo "::notice::Liquibase migration succeeded"
+              exit 0
+            else
+              echo "::error::Liquibase migration failed"
+              exit $STATUS
+            fi
+         EOF
+            chmod +x run_liquibase.sh
+            ./run_liquibase.sh
 
 
-        if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
-                    echo "::notice::Liquibase migration succeeded"
-                    exit 0
-                  else
-                    echo "::error::Liquibase migration failed"
-                    exit 1
-                  fi
-                  EOF
-                  chmod +x run_liquibase.sh
-                  ./run_liquibase.sh
 
-      
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
