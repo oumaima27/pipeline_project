@@ -98,6 +98,7 @@ jobs:
           cat << 'EOF' > run_liquibase.sh
           #!/bin/bash
           set -e
+
           echo "PATH: $PATH"
           echo "JAVA_HOME: $JAVA_HOME"
           echo "Checking Java and Maven..."
@@ -134,6 +135,7 @@ jobs:
 
           chmod +x run_liquibase.sh
           ./run_liquibase.sh
+      
       
       
       
