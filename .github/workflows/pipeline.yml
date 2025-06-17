@@ -108,12 +108,11 @@ jobs:
           echo "Running Liquibase migration..."
           echo "Listing current directory before running mvnw:"
           ls -la
-
-          echo "DB_NAME: ${DB_NAME}"
-          echo "DB_USER: ${DB_USER}"
-          echo "Current directory: $(pwd)"
-          echo "Maven version:"
-          ./mvnw -v || true
+               echo "DB_NAME: ${DB_NAME}"
+               echo "DB_USER: ${DB_USER}"
+               echo "Current directory: $(pwd)"
+               echo "Maven version:"
+               ./mvnw -v || true
   
           OUTPUT=$(./mvnw liquibase:update \
           -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
