@@ -92,15 +92,34 @@ jobs:
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          echo "=== Running Liquibase ==="
-          chmod +x mvnw
-          ./mvnw liquibase:update \
+          # Ensure Maven Wrapper is executable
+          if [ -f "./mvnw" ]; then
+            chmod +x ./mvnw
+          else
+            echo "Error: mvnw not found!"
+            ls -la
+            exit 1
+          fi
+
+          # Run Liquibase with proper error handling
+          if ./mvnw liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
             -Dliquibase.username=${DB_USER} \
             -Dliquibase.password=${DB_PASSWORD} \
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
-            -Dliquibase.searchPath=src/main/resources
+            -Dliquibase.searchPath=src/main/resources; then
+            echo "Liquibase executed successfully"
+          else
+            echo "Liquibase failed, trying direct Maven..."
+            mvn liquibase:update \
+              -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
+              -Dliquibase.username=${DB_USER} \
+              -Dliquibase.password=${DB_PASSWORD} \
+              -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
+              -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
+              -Dliquibase.searchPath=src/main/resources
+          
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
