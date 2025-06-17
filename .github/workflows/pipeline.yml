@@ -98,20 +98,14 @@ jobs:
           cat << 'EOF' > run_liquibase.sh
           #!/bin/bash
           set -e
-          echo "Running Liquibase migration..."
-          EOF
-          echo "PATH: \$PATH"
-          echo "JAVA_HOME: \$JAVA_HOME"
+          echo "PATH: $PATH"
+          echo "JAVA_HOME: $JAVA_HOME"
           echo "Checking Java and Maven..."
+          
           java -version
           ./mvnw -v
-
-          export DB_NAME=${DB_NAME}
-          export DB_USER=${DB_USER}
-          export DB_PASSWORD=${DB_PASSWORD}
-
-          echo "Running Liquibase with:"
-          echo "./mvnw liquibase:update -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/\${DB_NAME} ..."
+          
+          echo "Running Liquibase migration..."
 
           OUTPUT=$(./mvnw liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
@@ -120,7 +114,7 @@ jobs:
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
             -Dliquibase.searchPath=src/main/resources 2>&1)
-
+          EOF
           echo "\$OUTPUT"
           if echo "\$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
             echo "::notice::Liquibase migration succeeded"
