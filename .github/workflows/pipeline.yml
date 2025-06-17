@@ -119,8 +119,10 @@ jobs:
 
           chmod +x run_liquibase.sh
           ./run_liquibase.sh
-      
-      
+
+      - name: Run tests
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./mvnw clean test -Dspring.profiles.active=pipeline
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
