@@ -39,7 +39,6 @@ public class PersonController {
         return service.getById(id).map(existing -> {
             existing.setName(person.getName());
             existing.setEmail(person.getEmail());
-            existing.setAge(person.getAge());
             Person updated = service.save(existing);
             return ResponseEntity.ok(updated);
         }).orElse(ResponseEntity.notFound().build());
