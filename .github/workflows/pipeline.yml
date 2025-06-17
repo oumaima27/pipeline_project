@@ -97,7 +97,6 @@ jobs:
         run: |
           cat << 'EOF' > run_liquibase.sh
           #!/bin/bash
-          set -e
 
           echo "PATH: $PATH"
           echo "JAVA_HOME: $JAVA_HOME"
@@ -115,34 +114,22 @@ jobs:
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
             -Dliquibase.searchPath=src/main/resources 2>&1)
-          RETCODE=$?
 
+          echo "Liquibase output:"
           echo "$OUTPUT"
-
-          if [ $RETCODE -ne 0 ]; then
-            echo "::error::Liquibase migration failed with exit code $RETCODE"
-            exit 1
-          fi
 
           if echo "$OUTPUT" | grep -q "Liquibase: Update has been successful"; then
             echo "::notice::Liquibase migration succeeded"
             exit 0
           else
-            echo "::error::Liquibase migration did not report success"
+            echo "::error::Liquibase migration failed"
             exit 1
           fi
           EOF
 
           chmod +x run_liquibase.sh
           ./run_liquibase.sh
-      
-      
-      
-      
-      
-      
-      
-      
+       
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
