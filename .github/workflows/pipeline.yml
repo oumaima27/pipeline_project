@@ -71,6 +71,16 @@ jobs:
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
+          # Debug: Show project structure first
+          echo "=== Current directory structure ==="
+          echo "Current directory: $(pwd)"
+          echo "Files in src/main/resources/db/changelog/:"
+          ls -la src/main/resources/db/changelog/ || echo "No src/main/resources/db/changelog directory found"
+          echo "Files in target/classes/db/changelog/:"
+          ls -la target/classes/db/changelog/ || echo "No target/classes/db/changelog directory found"
+
+          # Run Liquibase with correct path
+          echo "=== Running Liquibase ==="
           ./mvnw liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false \
             -Dliquibase.username=appuser \
@@ -78,6 +88,13 @@ jobs:
             -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
             -Dliquibase.changeLogFile=db/changelog/db.changelog-master.xml
 
+          # Verify the changelog was applied
+          echo "=== Verifying migrations ==="
+          mysql -h127.0.0.1 -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} -e "
+            USE ${{ env.DB_NAME }};
+            SHOW TABLES;
+            SELECT id, author, filename, dateexecuted FROM DATABASECHANGELOG;
+          "
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
         env:
