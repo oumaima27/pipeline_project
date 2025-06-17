@@ -81,7 +81,7 @@ jobs:
           echo "Project structure:"
           ls -la
           echo "Database files:"
-          ls -la db/changelog/
+          ls -la src/main/resources/db/changelog/
           echo "Database connection test:"
           mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "SELECT 1" ${DB_NAME}
       - name: Check mvnw availability
