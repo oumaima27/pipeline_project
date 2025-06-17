@@ -73,26 +73,27 @@ jobs:
       - name: Build project to copy resources
         working-directory: ${{ env.PROJECT_DIR }}
         run: ./mvnw clean compile
-               - name: Debug environment
-               working-directory: ${{ env.PROJECT_DIR }}
-               run: |
-                 echo "Java version:"
-                 java -version
-                 echo "Maven version:"
-                 ./mvnw -v || mvn -v
-                 echo "Project files:"
-                 ls -la
-                 echo "Database connection test:"
-                 mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "SELECT 1" ${DB_NAME}
+
+      - name: Debug environment
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          echo "=== Environment Debug ==="
+          echo "Java version:"
+          java -version
+          echo "Maven version:"
+          ./mvnw -v || mvn -v
+          echo "Project structure:"
+          ls -la
+          echo "Database files:"
+          ls -la src/main/resources/db/changelog/
+          echo "Database connection test:"
+          mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "SELECT 1" ${DB_NAME}
 
       - name: Run Liquibase migrations
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          # Verify Maven Wrapper exists and is executable
-          chmod +x mvnw || true
-          ls -la mvnw
-
-          # Run with full path to ensure execution
+          echo "=== Running Liquibase ==="
+          chmod +x mvnw
           ./mvnw liquibase:update \
             -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
             -Dliquibase.username=${DB_USER} \
@@ -101,17 +102,14 @@ jobs:
             -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
             -Dliquibase.searchPath=src/main/resources
 
-          # Alternative direct execution if Maven Wrapper fails
-          if [ $? -ne 0 ]; then
-            echo "Trying with direct Maven..."
-            mvn liquibase:update \
-              -Dliquibase.url=jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true \
-              -Dliquibase.username=${DB_USER} \
-              -Dliquibase.password=${DB_PASSWORD} \
-              -Dliquibase.driver=com.mysql.cj.jdbc.Driver \
-              -Dliquibase.changeLogFile=src/main/resources/db/changelog/db.changelog-master.xml \
-              -Dliquibase.searchPath=src/main/resources
-          
+      - name: Build and test
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          ./mvnw clean install \
+            -Dspring-boot.run.profiles=pipeline \
+            -Dspring.datasource.url=${SPRING_DATASOURCE_URL} \
+            -Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME} \
+            -Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
 
       - name: Verify migrations
         run: |
