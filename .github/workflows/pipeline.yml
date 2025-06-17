@@ -127,7 +127,6 @@ jobs:
 
           chmod +x run_liquibase.sh
           ./run_liquibase.sh
-      
 
       - name: Build and test
         working-directory: ${{ env.PROJECT_DIR }}
