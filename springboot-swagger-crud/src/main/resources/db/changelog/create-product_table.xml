@@ -19,6 +19,9 @@
             </column>
             <column name="stock" type="INT" defaultValueNumeric="0"/>
         </createTable>
+        <rollback>
+            <dropTable tableName="product"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

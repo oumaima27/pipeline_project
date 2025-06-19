@@ -7,6 +7,7 @@
        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet id="1" author="oumaima">
+
         <createTable tableName="person">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
@@ -14,6 +15,12 @@
             <column name="name" type="VARCHAR(100)"/>
             <column name="email" type="VARCHAR(100)"/>
         </createTable>
-    </changeSet>
+        <rollback>
+            <dropTable tableName="person"/>
 
+        </rollback>
+    </changeSet>
+    <changeSet id="2-tag-person" author="oumaima" runAlways="true">
+        <tagDatabase tag="tag-person"/>
+    </changeSet>
 </databaseChangeLog>

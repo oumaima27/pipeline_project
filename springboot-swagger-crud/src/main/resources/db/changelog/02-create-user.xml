@@ -15,6 +15,9 @@
             </column>
             <column name="email" type="VARCHAR(255)"/>
         </createTable>
+        <rollback>
+            <dropTable tableName="user"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -18,6 +18,9 @@
             <column name="city" type="VARCHAR(100)"/>
             <column name="zip_code" type="VARCHAR(20)"/>
         </createTable>
+        <rollback>
+            <dropTable tableName="address"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>
