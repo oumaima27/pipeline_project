@@ -5,12 +5,12 @@ on: [push]
 env:
   DB_NAME: oumaima
   DB_HOST: 127.0.0.1
-  DB_USER: appuser
-  DB_PASSWORD: apppassword
+  DB_USER: ${{ secrets.DB_USER }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   SPRING_PROFILES_ACTIVE: pipeline
   SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
-  SPRING_DATASOURCE_USERNAME: appuser
-  SPRING_DATASOURCE_PASSWORD: apppassword
+  SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+  SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
 
 jobs:
   build-and-test:
