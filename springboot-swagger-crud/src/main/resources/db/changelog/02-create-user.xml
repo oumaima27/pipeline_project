@@ -1,22 +1,33 @@
-<changeSet id="2" author="oumaima">
-    <createTable tableName="payment_method">
-        <column name="id" type="INT" autoIncrement="true">
-            <constraints primaryKey="true" nullable="false"/>
-        </column>
-        <column name="method_name" type="VARCHAR(100)">
-            <constraints nullable="false"/>
-        </column>
-        <column name="description" type="VARCHAR(255)"/>
-        <column name="active" type="BOOLEAN" defaultValueBoolean="true"/>
-    </createTable>
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+           http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <!-- Add CHECK constraint for method_name -->
-    <addCheckConstraint
+    <changeSet id="2" author="oumaima">
+        <createTable tableName="payment_method">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="method_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"/>
+        </createTable>
+
+        <!-- If you want to add a check constraint, uncomment and adapt:
+        <addCheckConstraint
             tableName="payment_method"
             constraintName="chk_payment_method_name"
             checkCondition="method_name IN ('Cash', 'Credit Card', 'Insurance', 'Bank Transfer')"/>
+        -->
 
-    <rollback>
-        <dropTable tableName="payment_method"/>
-    </rollback>
-</changeSet>
+        <rollback>
+            <dropTable tableName="payment_method"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
