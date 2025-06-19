@@ -5,13 +5,7 @@
         xsi:schemaLocation="
        http://www.liquibase.org/xml/ns/dbchangelog
        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-    <changeSet id="fail-test" author="oumaima" runAlways="true">
-        <createTable tableName="person">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
+
 
     <include file="01-create-person.xml" relativeToChangelogFile="true"/>
     <include file="03-create-address.xml" relativeToChangelogFile="true"/>
