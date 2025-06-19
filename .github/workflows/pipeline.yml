@@ -120,7 +120,7 @@ jobs:
             echo "Attempting rollback to tag 'tag-person'..."
 
             ./mvnw liquibase:rollback \
-              -Dliquibase.rollbackTag=tag-person \
+              -Dliquibase.rollbackCount=1 \
               -Dliquibase.url="jdbc:mysql://127.0.0.1:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true" \
               -Dliquibase.username="${DB_USER}" \
               -Dliquibase.password="${DB_PASSWORD}" \
