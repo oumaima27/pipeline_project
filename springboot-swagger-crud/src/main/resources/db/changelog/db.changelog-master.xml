@@ -10,7 +10,7 @@
     <include file="01-create-person.xml" relativeToChangelogFile="true"/>
     <include file="03-create-address.xml" relativeToChangelogFile="true"/>
     <include file="04-add-phone.xml" relativeToChangelogFile="true"/>
-    <include file="02-create-user.xml" relativeToChangelogFile="true"/>
+    <include file="05-create-payment-method.xml" relativeToChangelogFile="true"/>
     <include file="create-product_table.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
