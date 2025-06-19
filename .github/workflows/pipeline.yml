@@ -98,7 +98,7 @@ jobs:
         run: |
           cat << 'EOF' > run_liquibase.sh
           #!/bin/bash
-          set -e
+          set +e
 
           echo "=== Running Liquibase Migration ==="
           java -version
@@ -125,6 +125,13 @@ jobs:
               -Dliquibase.username="${DB_USER}" \
               -Dliquibase.password="${DB_PASSWORD}" \
               -Dliquibase.driver=com.mysql.cj.jdbc.Driver
+          
+            echo "🛠️ Verifying rollback..."
+            mysql -h127.0.0.1 -u${DB_USER} -p${DB_PASSWORD} -e "
+            USE ${DB_NAME};
+            SHOW TABLES;
+            SELECT id, author, filename, EXECTYPE, dateexecuted FROM DATABASECHANGELOG ORDER BY dateexecuted DESC;
+            "
 
             exit 1
           fi
