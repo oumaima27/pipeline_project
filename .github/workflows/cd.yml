@@ -44,6 +44,7 @@ jobs:
           docker run --rm oumaimamaghraoui27/springboot-app:latest \
             java -jar app.jar \
             --spring.liquibase.enabled=true \
-            --spring.datasource.url="${{ secrets.PROD_DB_URL }}" \
+            --spring.datasource.url=jdbc:mysql://host.docker.internal:3307/oumaima \
             --spring.datasource.username="${{ secrets.PROD_DB_USER }}" \
             --spring.datasource.password="${{ secrets.PROD_DB_PASSWORD }}"
+      
