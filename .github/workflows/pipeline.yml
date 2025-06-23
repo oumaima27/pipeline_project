@@ -33,7 +33,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Navigate to project folder and set PROJECT_DIR
         run: |
           cd springboot-swagger-crud
