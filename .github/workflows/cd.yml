@@ -2,7 +2,7 @@ name: Deploy to DockerHub
 
 on:
   workflow_run:
-    workflows: ["CI/CD Pipeline"]  # must match exactly
+    workflows: ["CI Pipeline"]
     types:
       - completed
 
@@ -38,3 +38,12 @@ jobs:
         run: |
           docker build -t oumaimamaghraoui27/springboot-app:latest .
           docker push oumaimamaghraoui27/springboot-app:latest
+
+      - name: Run Liquibase migration on production DB
+        run: |
+          docker run --rm oumaimamaghraoui27/springboot-app:latest \
+            java -jar app.jar \
+            --spring.liquibase.enabled=true \
+            --spring.datasource.url="${{ secrets.PROD_DB_URL }}" \
+            --spring.datasource.username="${{ secrets.PROD_DB_USER }}" \
+            --spring.datasource.password="${{ secrets.PROD_DB_PASSWORD }}"
