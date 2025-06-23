@@ -19,6 +19,5 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3307/oumaima
       SPRING_DATASOURCE_USERNAME: appuser
       SPRING_DATASOURCE_PASSWORD: apppassword
-
     ports:
       - "8081:8081"
