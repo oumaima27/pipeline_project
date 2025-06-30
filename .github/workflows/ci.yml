@@ -35,33 +35,23 @@ jobs:
         run: |
           cd springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
-          JAR_FILE=$(ls target/ | grep -E '^springboot-swagger-crud.*\.jar$' | head -1)
-          echo "JAR_FILE=target/$JAR_FILE" >> $GITHUB_ENV
 
-      - name: Setup JDK 17
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Wait for MySQL
-        run: |
-          for i in {1..10}; do
-            if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
-              exit 0
-            fi
-            sleep 2
-          done
-          exit 1
-
       - name: Build and Test
         working-directory: ${{ env.PROJECT_DIR }}
-        run: chmod +x mvnw && ./mvnw clean verify
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: springboot-app-artifacts
+          name: springboot-artifacts
           path: |
             ${{ env.PROJECT_DIR }}/target/*.jar
             ${{ env.PROJECT_DIR }}/Dockerfile
