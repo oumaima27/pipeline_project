@@ -9,26 +9,34 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Download CI Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
+          path: springboot-swagger-crud/springboot-swagger-crud
+
+      - name: Navigate to project directory
+        run: |
+          cd springboot-swagger-crud/springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
+          echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Docker Image
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
           docker build -t oumaimamaghraoui27/springboot-app:${{ github.sha }} .
           docker push oumaimamaghraoui27/springboot-app:${{ github.sha }}
 
       - name: Apply Production Migrations
+        working-directory: ${{ env.PROJECT_DIR }}
         env:
           SPRING_DATASOURCE_URL: ${{ secrets.PROD_DB_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.PROD_DB_USER }}
@@ -36,15 +44,16 @@ jobs:
         run: |
           docker run --rm \
             -e SPRING_PROFILES_ACTIVE=prod \
-            -e SPRING_DATASOURCE_URL=${{ env.SPRING_DATASOURCE_URL }} \
-            -e SPRING_DATASOURCE_USERNAME=${{ env.SPRING_DATASOURCE_USERNAME }} \
-            -e SPRING_DATASOURCE_PASSWORD=${{ env.SPRING_DATASOURCE_PASSWORD }} \
+            -e SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL \
+            -e SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME \
+            -e SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD \
             -e SPRING_LIQUIBASE_ENABLED=true \
             oumaimamaghraoui27/springboot-app:${{ github.sha }} \
-            java -jar *.jar \
+            java -jar target/*.jar \
             --spring.main.web-application-type=none
 
       - name: Deploy Application
         run: |
-          echo "Deploy to Kubernetes/ECS here (example)"
-          # kubectl apply -f k8s.yaml
+          echo "Add your deployment commands here"
+          # Example for Kubernetes:
+          # kubectl set image deployment/springboot-app springboot-app=oumaimamaghraoui27/springboot-app:${{ github.sha }}
