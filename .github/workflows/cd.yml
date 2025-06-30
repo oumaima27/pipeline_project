@@ -16,7 +16,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: springboot-app-artifacts
-          path: springboot-swagger-crud/springboot-swagger-crud
+          path: springboot-swagger-crud
 
       - name: Verify Artifacts
         run: |
@@ -30,13 +30,13 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Docker Image
-        working-directory: springboot-swagger-crud/springboot-swagger-crud
+        working-directory: springboot-swagger-crud
         run: |
           docker build -t oumaimamaghraoui27/springboot-app:${{ github.sha }} .
           docker push oumaimamaghraoui27/springboot-app:${{ github.sha }}
 
       - name: Apply Migrations
-        working-directory: springboot-swagger-crud/springboot-swagger-crud
+        working-directory: springboot-swagger-crud
         env:
           SPRING_DATASOURCE_URL: ${{ secrets.PROD_DB_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.PROD_DB_USER }}

@@ -33,7 +33,7 @@ jobs:
 
       - name: Navigate to project folder
         run: |
-          cd springboot-swagger-crud/springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
+          cd springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
           JAR_FILE=$(ls target/ | grep -E '^springboot-swagger-crud.*\.jar$' | head -1)
           echo "JAR_FILE=target/$JAR_FILE" >> $GITHUB_ENV
@@ -59,12 +59,11 @@ jobs:
         run: chmod +x mvnw && ./mvnw clean verify
 
       - name: Upload Artifacts
-        working-directory: ${{ env.PROJECT_DIR }}
         uses: actions/upload-artifact@v4
         with:
           name: springboot-app-artifacts
           path: |
-            target/*.jar
-            Dockerfile
-            src/main/resources/db/changelog/**
+            ${{ env.PROJECT_DIR }}/target/*.jar
+            ${{ env.PROJECT_DIR }}/Dockerfile
+            ${{ env.PROJECT_DIR }}/src/main/resources/db/changelog/**
           retention-days: 1
