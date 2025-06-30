@@ -3,90 +3,48 @@ name: CD Pipeline
 on:
   workflow_run:
     workflows: ["CI Pipeline"]
-    types:
-      - completed
+    types: [completed]
 
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    services:
-      db:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword123
-          MYSQL_DATABASE: oumaima
-          MYSQL_USER: ${{ secrets.DB_USER }}
-          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h127.0.0.1 -uroot -prootpassword123"
-          --health-interval=5s
-          --health-timeout=10s
-          --health-retries=10
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set working directory
-        run: |
-          cd springboot-swagger-crud
-          echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Download CI Artifacts
+        uses: actions/download-artifact@v3
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          name: build-artifacts
 
-      - name: Wait for MySQL
-        timeout-minutes: 2
-        run: |
-          for i in {1..30}; do
-            if docker run --network host --rm mysql:8.0 \
-              mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
-              echo "MySQL is ready"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "MySQL failed to start"
-          exit 1
-
-      - name: Build production JAR
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: ./mvnw clean package -DskipTests
-
-      - name: Log in to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker image
-        working-directory: ${{ env.PROJECT_DIR }}
+      - name: Build and Push Docker Image
         run: |
-          docker build -t oumaimamaghraoui27/springboot-app:latest .
-          docker push oumaimamaghraoui27/springboot-app:latest
+          docker build -t oumaimamaghraoui27/springboot-app:${{ github.sha }} .
+          docker push oumaimamaghraoui27/springboot-app:${{ github.sha }}
 
-      - name: Run database migrations
-        timeout-minutes: 5
+      - name: Apply Production Migrations
+        env:
+          SPRING_DATASOURCE_URL: ${{ secrets.PROD_DB_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.PROD_DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
-          docker run --network host --rm \
-            -e "SPRING_PROFILES_ACTIVE=prod" \
-            -e "SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/oumaima" \
-            -e "SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }}" \
-            -e "SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}" \
-            oumaimamaghraoui27/springboot-app:latest \
-            java -jar app.jar \
-            --spring.main.web-application-type=none \
-            --spring.liquibase.enabled=true
+          docker run --rm \
+            -e SPRING_PROFILES_ACTIVE=prod \
+            -e SPRING_DATASOURCE_URL=${{ env.SPRING_DATASOURCE_URL }} \
+            -e SPRING_DATASOURCE_USERNAME=${{ env.SPRING_DATASOURCE_USERNAME }} \
+            -e SPRING_DATASOURCE_PASSWORD=${{ env.SPRING_DATASOURCE_PASSWORD }} \
+            -e SPRING_LIQUIBASE_ENABLED=true \
+            oumaimamaghraoui27/springboot-app:${{ github.sha }} \
+            java -jar *.jar \
+            --spring.main.web-application-type=none
 
-      - name: Verify deployment
+      - name: Deploy Application
         run: |
-          docker run --network host --rm mysql:8.0 \
-            mysql -h127.0.0.1 -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} \
-            -e "SHOW TABLES;" oumaima
+          echo "Deploy to Kubernetes/ECS here (example)"
+          # kubectl apply -f k8s.yaml
