@@ -1,71 +1,87 @@
-name: CI Pipeline
+name: CD Pipeline
 
-on: [push]
-
-env:
-  DB_NAME: oumaima
-  DB_HOST: 127.0.0.1
-  DB_USER: ${{ secrets.DB_USER }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  SPRING_PROFILES_ACTIVE: ci
-  SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
-  SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER }}
-  SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
 
 jobs:
-  build-and-test:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     services:
-      mysql:
+      db:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: rootpassword123
           MYSQL_DATABASE: oumaima
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -uroot -prootpassword123"
+          --health-cmd="mysqladmin ping -h127.0.0.1 -uroot -prootpassword123"
           --health-interval=5s
           --health-timeout=10s
           --health-retries=10
     steps:
       - uses: actions/checkout@v4
 
-      - name: Navigate to project folder
+      - name: Set working directory
         run: |
           cd springboot-swagger-crud
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
-          echo "JAR_FILE=target/$(ls $PROJECT_DIR/target | grep -E '^springboot-swagger-crud.*\.jar$')" >> $GITHUB_ENV
-      - name: Setup JDK 17
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Wait for MySQL and configure
+      - name: Wait for MySQL
         timeout-minutes: 2
         run: |
           for i in {1..30}; do
-            if mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
-              mysql -h127.0.0.1 -uroot -prootpassword123 -e "
-                CREATE DATABASE IF NOT EXISTS ${DB_NAME};
-                CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
-                GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
-                FLUSH PRIVILEGES;"
-              echo "MySQL configured successfully"
+            if docker run --network host --rm mysql:8.0 \
+              mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
+              echo "MySQL is ready"
               exit 0
             fi
             sleep 2
           done
-          echo "MySQL configuration failed"
+          echo "MySQL failed to start"
           exit 1
-      - name: Build with tests
+      - name: Build production JAR
         working-directory: ${{ env.PROJECT_DIR }}
-        run: ./mvnw clean verify -Dspring.profiles.active=ci
+        run: ./mvnw clean package -DskipTests
 
-      - name: Build Docker image (for CD pipeline)
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker image
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          docker build -t oumaimamaghraoui27/springboot-app:ci .
+          docker build -t oumaimamaghraoui27/springboot-app:latest .
+          docker push oumaimamaghraoui27/springboot-app:latest
+      - name: Run database migrations
+        timeout-minutes: 5
+        run: |
+          docker run --network host --rm \
+            -e "SPRING_PROFILES_ACTIVE=prod" \
+            -e "SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/oumaima" \
+            -e "SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }}" \
+            -e "SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            oumaimamaghraoui27/springboot-app:latest \
+            java -jar app.jar \
+            --spring.main.web-application-type=none \
+            --spring.liquibase.enabled=true
+      - name: Verify deployment
+        run: |
+          docker run --network host --rm mysql:8.0 \
+            mysql -h127.0.0.1 -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} \
+            -e "SHOW TABLES;" oumaima
