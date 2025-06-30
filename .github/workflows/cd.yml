@@ -3,42 +3,90 @@ name: CD Pipeline
 on:
   workflow_run:
     workflows: ["CI Pipeline"]
-    types: [completed]
+    types:
+      - completed
 
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword123
+          MYSQL_DATABASE: oumaima
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h127.0.0.1 -uroot -prootpassword123"
+          --health-interval=5s
+          --health-timeout=10s
+          --health-retries=10
 
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Set working directory
+        run: |
+          cd springboot-swagger-crud
+          echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          name: springboot-artifacts
-          path: springboot-swagger-crud
+          java-version: '17'
+          distribution: 'temurin'
 
-      - name: Verify Download
-        run: ls -la springboot-swagger-crud/target/
-
-      - name: Build and Push Docker Image
-        working-directory: springboot-swagger-crud
+      - name: Wait for MySQL
+        timeout-minutes: 2
         run: |
-          docker build -t oumaimamaghraoui27/springboot-app:${{ github.sha }} .
-          docker push oumaimamaghraoui27/springboot-app:${{ github.sha }}
+          for i in {1..30}; do
+            if docker run --network host --rm mysql:8.0 \
+              mysqladmin ping -h127.0.0.1 -uroot -prootpassword123 --silent; then
+              echo "MySQL is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL failed to start"
+          exit 1
 
-      - name: Apply Migrations
-        env:
-          SPRING_DATASOURCE_URL: ${{ secrets.PROD_DB_URL }}
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.PROD_DB_USER }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      - name: Build production JAR
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./mvnw clean package -DskipTests
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker image
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          docker run --rm \
-            -e SPRING_PROFILES_ACTIVE=prod \
-            -e SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL \
-            -e SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME \
-            -e SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD \
-            -e SPRING_LIQUIBASE_ENABLED=true \
-            oumaimamaghraoui27/springboot-app:${{ github.sha }} \
-            java -jar target/*.jar \
-            --spring.main.web-application-type=none
+          docker build -t oumaimamaghraoui27/springboot-app:latest .
+          docker push oumaimamaghraoui27/springboot-app:latest
+
+      - name: Run database migrations
+        timeout-minutes: 5
+        run: |
+          docker run --network host --rm \
+            -e "SPRING_PROFILES_ACTIVE=prod" \
+            -e "SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/oumaima" \
+            -e "SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }}" \
+            -e "SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            oumaimamaghraoui27/springboot-app:latest \
+            java -jar app.jar \
+            --spring.main.web-application-type=none \
+            --spring.liquibase.enabled=true
+
+      - name: Verify deployment
+        run: |
+          docker run --network host --rm mysql:8.0 \
+            mysql -h127.0.0.1 -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} \
+            -e "SHOW TABLES;" oumaima
