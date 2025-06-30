@@ -12,16 +12,16 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Download CI Artifacts
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           name: springboot-app-artifacts
-          path: springboot-swagger-crud
+          path: springboot-swagger-crud/springboot-swagger-crud
 
-      - name: Navigate to project directory
+      - name: Verify Artifacts
         run: |
-          cd springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
-          echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
+          ls -la springboot-swagger-crud/springboot-swagger-crud/target/
+          ls -la springboot-swagger-crud/springboot-swagger-crud/
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -30,13 +30,13 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push Docker Image
-        working-directory: ${{ env.PROJECT_DIR }}
+        working-directory: springboot-swagger-crud/springboot-swagger-crud
         run: |
           docker build -t oumaimamaghraoui27/springboot-app:${{ github.sha }} .
           docker push oumaimamaghraoui27/springboot-app:${{ github.sha }}
 
-      - name: Apply Production Migrations
-        working-directory: ${{ env.PROJECT_DIR }}
+      - name: Apply Migrations
+        working-directory: springboot-swagger-crud/springboot-swagger-crud
         env:
           SPRING_DATASOURCE_URL: ${{ secrets.PROD_DB_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.PROD_DB_USER }}
@@ -51,9 +51,3 @@ jobs:
             oumaimamaghraoui27/springboot-app:${{ github.sha }} \
             java -jar target/*.jar \
             --spring.main.web-application-type=none
-
-      - name: Deploy Application
-        run: |
-          echo "Add your deployment commands here"
-          # Example for Kubernetes:
-          # kubectl set image deployment/springboot-app springboot-app=oumaimamaghraoui27/springboot-app:${{ github.sha }}
