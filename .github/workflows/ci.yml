@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Navigate to project folder
         run: |
-            cd springboot-swagger-crud
+            cd springboot-swagger-crud/springboot-swagger-crud
             echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
             echo "JAR_FILE=target/$(ls $PROJECT_DIR/target | grep -E '^springboot-swagger-crud.*\.jar$')" >> $GITHUB_ENV
       - name: Setup Java 17
