@@ -21,12 +21,12 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_ROOT_PASSWORD: rootpassword123
+          MYSQL_DATABASE: oumaima
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }}"
+          --health-cmd="mysqladmin ping -uroot -prootpassword123"
           --health-interval=5s
           --health-timeout=10s
           --health-retries=10
@@ -39,13 +39,6 @@ jobs:
           cd springboot-swagger-crud
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
           echo "JAR_FILE=target/$(ls $PROJECT_DIR/target | grep -E '^springboot-swagger-crud.*\.jar$')" >> $GITHUB_ENV
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
 
       - name: Setup JDK 17
         uses: actions/setup-java@v3
