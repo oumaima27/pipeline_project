@@ -63,12 +63,11 @@ jobs:
         run: chmod +x mvnw && ./mvnw clean verify
 
       - name: Upload Artifacts
-        working-directory: ${{ env.PROJECT_DIR }}
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
-            target/*.jar
-            Dockerfile
-            src/main/resources/db/changelog/**
+            ${{ env.PROJECT_DIR }}/target/*.jar
+            ${{ env.PROJECT_DIR }}/Dockerfile
+            ${{ env.PROJECT_DIR }}/src/main/resources/db/changelog/**
           retention-days: 1
