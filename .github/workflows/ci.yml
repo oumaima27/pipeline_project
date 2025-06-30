@@ -30,13 +30,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Navigate to project folder
         run: |
-            cd springboot-swagger-crud/springboot-swagger-crud/springboot-swagger-crud
-            echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
-            echo "JAR_FILE=target/$(ls $PROJECT_DIR/target | grep -E '^springboot-swagger-crud.*\.jar$')" >> $GITHUB_ENV
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+          cd springboot-swagger-crud/springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
+          echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
+          JAR_FILE=$(ls target/ | grep -E '^springboot-swagger-crud.*\.jar$' | head -1)
+          if [ -z "$JAR_FILE" ]; then
+            echo "JAR_FILE=target/springboot-swagger-crud.jar" >> $GITHUB_ENV
+          else
+            echo "JAR_FILE=target/$JAR_FILE" >> $GITHUB_ENV
+          fi
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -52,9 +59,11 @@ jobs:
           exit 1
 
       - name: Build and Test
-        run: ./mvnw clean verify
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x mvnw && ./mvnw clean verify
 
       - name: Upload Artifacts
+        working-directory: ${{ env.PROJECT_DIR }}
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
@@ -62,4 +71,4 @@ jobs:
             target/*.jar
             Dockerfile
             src/main/resources/db/changelog/**
-          retention-days: 1  # Clean up after 1 day
+          retention-days: 1
