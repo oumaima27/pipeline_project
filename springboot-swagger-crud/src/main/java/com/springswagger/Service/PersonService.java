@@ -1,11 +1,13 @@
 package com.springswagger.Service;
 import com.springswagger.models.Person;
 import com.springswagger.repositorys.PersonRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class PersonService {
     private final PersonRepository repo;
 

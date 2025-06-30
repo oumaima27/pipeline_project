@@ -8,18 +8,40 @@ services:
       MYSQL_DATABASE: oumaima
       MYSQL_USER: appuser
       MYSQL_PASSWORD: apppassword
+    command: --default-authentication-plugin=mysql_native_password
     ports:
-      - "3306:3306"
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword123"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   app:
     image: oumaimamaghraoui27/springboot-app:latest
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    ports:
+      - "8082:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/oumaima
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: appuser
       SPRING_DATASOURCE_PASSWORD: apppassword
+      #SERVER_SERVLET_CONTEXT_PATH: /Oumaima
+      #MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info"
 
-
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
     ports:
-      - "8081:8081"
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:

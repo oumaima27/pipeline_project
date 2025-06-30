@@ -4,6 +4,7 @@ package com.springswagger.Service;
 import com.springswagger.models.Product;
 import com.springswagger.repositorys.ProductRepository;
 import com.springswagger.models.Product;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class ProductService {
 
     @Autowired
