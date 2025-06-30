@@ -15,12 +15,12 @@ jobs:
       - name: Download CI Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
-          path: springboot-swagger-crud/springboot-swagger-crud
+          name: springboot-app-artifacts
+          path: springboot-swagger-crud
 
       - name: Navigate to project directory
         run: |
-          cd springboot-swagger-crud/springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
+          cd springboot-swagger-crud || { echo "Error: Project folder not found"; exit 1; }
           echo "PROJECT_DIR=$(pwd)" >> $GITHUB_ENV
 
       - name: Login to DockerHub
