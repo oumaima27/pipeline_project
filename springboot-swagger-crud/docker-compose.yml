@@ -20,7 +20,7 @@ services:
       - mysql_data:/var/lib/mysql
 
   app:
-    image: oumaimamaghraoui27/springboot-app:latest
+    image: oumaimamaghraoui27/yourapp:1.0.28
     depends_on:
       db:
         condition: service_healthy
