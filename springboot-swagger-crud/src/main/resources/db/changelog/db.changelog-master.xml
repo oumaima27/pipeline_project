@@ -14,6 +14,7 @@
     <include file="create-product_table.xml" relativeToChangelogFile="true"/>
     <include file="05-testing-changelog.xml" relativeToChangelogFile="true" />
     <include file="hello.xml" relativeToChangelogFile="true"/>
+    <include file="test.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
 
 
