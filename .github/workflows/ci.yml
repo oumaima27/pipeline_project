@@ -47,6 +47,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build and test
+      - name: Build and test the app
         working-directory: springboot-swagger-crud
         run: ./mvnw clean verify -Dspring.profiles.active=ci
