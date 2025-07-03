@@ -66,7 +66,25 @@ jobs:
             java -jar app.jar \
             --spring.main.web-application-type=none \
             --spring.liquibase.enabled=true || {
-              echo "❌ Migration failed. Rollback to previous version"
-              docker pull ${{ secrets.DOCKER_USERNAME }}/yourapp:latest
-              exit 1
+              echo "❌ Migration failed. Rolling back..."
+              docker pull ${{ secrets.DOCKER_USERNAME }}/yourapp:latest-stable
+              docker run -d --network host \
+                -e SPRING_PROFILES_ACTIVE=prod \
+                -e SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/oumaima \
+                -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }} \
+                -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
+                ${{ secrets.DOCKER_USERNAME }}/yourapp:latest-stable
             }
+
+      - name: Tag and push latest-stable
+        if: ${{ success() }}
+        run: |
+          docker tag ${{ secrets.DOCKER_USERNAME }}/yourapp:1.0.${{ github.run_number }} ${{ secrets.DOCKER_USERNAME }}/yourapp:latest-stable
+          docker push ${{ secrets.DOCKER_USERNAME }}/yourapp:latest-stable
+
+      - name: Clean up Docker
+        if: always()
+        run: |
+          echo "🧹 Cleaning up Docker..."
+          docker system prune -af --volumes
+
