@@ -9,7 +9,6 @@
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="id" type="VARCHAR(100)"/>
             <column name="cin" type="VARCHAR(100)"/>
             <column name="photo" type="VARCHAR(100)"/>
 
