@@ -69,8 +69,10 @@ jobs:
       - name: Build and Push Docker image
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          docker build -t oumaimamaghraoui27/springboot-app:latest .
-          docker push oumaimamaghraoui27/springboot-app:latest
+          docker build -t yourapp:latest -t yourapp:1.0.${{ github.run_number }} .
+          docker push yourapp:latest
+          docker push yourapp:1.0.${{ github.run_number }}
+
 
       - name: Run database migrations
         timeout-minutes: 5
