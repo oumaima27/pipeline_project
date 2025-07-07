@@ -88,3 +88,11 @@ jobs:
           echo "🧹 Cleaning up Docker..."
           docker system prune -af --volumes
 
+
+
+      - name: Clean up Docker
+        if: always()
+        run: |
+          echo "🧹 Cleaning up Docker..."
+          docker system prune -af --volumes
+
