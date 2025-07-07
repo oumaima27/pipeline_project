@@ -59,7 +59,7 @@ jobs:
         run: |
           docker run --network host --rm \
             -e SPRING_PROFILES_ACTIVE=prod \
-            -e SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/oumaima \
+            -e SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/oumaima \
             -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }} \
             -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
             ${{ secrets.DOCKER_USERNAME }}/yourapp:1.0.${{ github.run_number }} \
@@ -70,7 +70,7 @@ jobs:
               docker pull ${{ secrets.DOCKER_USERNAME }}/yourapp:latest-stable
               docker run -d --network host \
                 -e SPRING_PROFILES_ACTIVE=prod \
-                -e SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/oumaima \
+                -e SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/oumaima \
                 -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USER }} \
                 -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
                 ${{ secrets.DOCKER_USERNAME }}/yourapp:latest-stable
