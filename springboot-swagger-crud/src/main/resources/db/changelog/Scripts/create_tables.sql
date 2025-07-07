@@ -1,4 +1,4 @@
-INSERT INTO IF NOT EXISTS locations (person_id, email, address)
+INSERT INTO locations (person_id, email, address)
 VALUES
     ('P001', 'john.doe@example.com', '123 Maple St, Springfield'),
     ('P002', 'jane.smith@example.com', '456 Oak Ave, Rivertown'),
