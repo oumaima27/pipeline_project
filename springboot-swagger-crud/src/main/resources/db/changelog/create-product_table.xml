@@ -23,5 +23,7 @@
             <dropTable tableName="product"/>
         </rollback>
     </changeSet>
-
+    <changeSet id="2-tag-product" author="oumaima" runAlways="true">
+        <tagDatabase tag="tag-product"/>
+    </changeSet>
 </databaseChangeLog>

@@ -16,5 +16,7 @@
             <dropColumn tableName="person" columnName="phone"/>
         </rollback>
     </changeSet>
-
+    <changeSet id="2-tag-phone" author="oumaima" runAlways="true">
+        <tagDatabase tag="tag-phone"/>
+    </changeSet>
 </databaseChangeLog>

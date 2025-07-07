@@ -13,7 +13,7 @@
     <include file="05-create-payment-method.xml" relativeToChangelogFile="true"/>
     <include file="create-product_table.xml" relativeToChangelogFile="true"/>
     <include file="05-testing-changelog.xml" relativeToChangelogFile="true" />
-
+<include file="Scripts/create_tables.sql" relativeToChangelogFile="true" />
 </databaseChangeLog>
 
 

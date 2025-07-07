@@ -22,5 +22,7 @@
             <dropTable tableName="address"/>
         </rollback>
     </changeSet>
-
+    <changeSet id="2-tag-addresses" author="oumaima" runAlways="true">
+        <tagDatabase tag="tag-addresses"/>
+    </changeSet>
 </databaseChangeLog>

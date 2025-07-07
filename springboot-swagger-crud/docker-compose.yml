@@ -20,14 +20,14 @@ services:
       - mysql_data:/var/lib/mysql
 
   app:
-    image: oumaimamaghraoui27/yourapp:1.0.41
+    image: oumaimamaghraoui27/yourapp:1.0.42
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8082:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/oumaima?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: appuser
       SPRING_DATASOURCE_PASSWORD: apppassword
       #SERVER_SERVLET_CONTEXT_PATH: /Oumaima
