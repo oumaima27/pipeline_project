@@ -13,5 +13,9 @@
             <column name="photo" type="VARCHAR(100)"/>
 
         </createTable>
+        <rollback>
+            <dropTable tableName="hello"/>
+
+        </rollback>
     </changeSet>
 </databaseChangeLog>
