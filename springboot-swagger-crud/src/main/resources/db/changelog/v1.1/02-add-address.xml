@@ -8,7 +8,7 @@
 
     </changeSet>
     <changeSet id="tag-1.1" author="oumaima" runAlways="true">
-        <tagDatabase tag="v1.0"/>
+        <tagDatabase tag="v1.1"/>
     </changeSet>
 
 </databaseChangeLog>
