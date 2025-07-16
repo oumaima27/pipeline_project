@@ -65,8 +65,8 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime</scope> <!-- Or runtime if using H2 in dev too -->
-			<version>2.2.224</version> <!-- Use latest version -->
+			<scope>runtime</scope>
+			<version>2.2.224</version>
 		</dependency>
 		<!-- Lombok -->
 		<dependency>

@@ -32,4 +32,5 @@
     <changeSet id="2-tag-payment" author="oumaima" runAlways="true">
         <tagDatabase tag="tag-payment"/>
     </changeSet>
+
 </databaseChangeLog>

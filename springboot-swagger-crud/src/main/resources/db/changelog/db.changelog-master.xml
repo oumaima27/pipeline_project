@@ -12,14 +12,14 @@
     <include file="05-create-payment-method.xml" relativeToChangelogFile="true"/>
     <include file="create-product_table.xml" relativeToChangelogFile="true"/>
     <include file="05-testing-changelog.xml" relativeToChangelogFile="true" />
-<include file="Scripts/create_tables.sql" relativeToChangelogFile="true" />
+    <include file="Scripts/create_tables.sql" relativeToChangelogFile="true" />
+    <include file="v1.1/try-out.xml" relativeToChangelogFile="true"/>
 
-
-    <!-- Version 1.0 -->
+    <!--version 1.0 -->
     <include file="v1.0/01-init-person.xml" relativeToChangelogFile="true"/>
-    <!-- Version 1.1 -->
+    <!--version 1.1 -->
     <include file="v1.1/02-add-address.xml" relativeToChangelogFile="true"/>
-
+<include file="Scripts/test-script-demo.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
 
 

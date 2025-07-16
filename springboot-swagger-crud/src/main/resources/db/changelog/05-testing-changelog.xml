@@ -22,6 +22,7 @@
         </changeSet>
         <changeSet id="2-tag-locations" author="oumaima" runAlways="true">
             <tagDatabase tag="tag-locations"/>
+
         </changeSet>
 
 </databaseChangeLog>
