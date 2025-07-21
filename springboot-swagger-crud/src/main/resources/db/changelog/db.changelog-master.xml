@@ -19,7 +19,8 @@
     <include file="v1.0/01-init-person.xml" relativeToChangelogFile="true"/>
     <!--version 1.1 -->
     <include file="v1.1/02-add-address.xml" relativeToChangelogFile="true"/>
-<include file="Scripts/test-script-demo.sql" relativeToChangelogFile="true"/>
+    <include file="Scripts/test-script-demo.sql" relativeToChangelogFile="true"/>
+    <include file="Demo-table.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>
 
 

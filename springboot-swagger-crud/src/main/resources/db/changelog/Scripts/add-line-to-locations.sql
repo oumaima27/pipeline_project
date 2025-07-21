@@ -1,2 +1,2 @@
-INSERT INTO locations (person_id, email, address) VALUES
-    ('P045', 'maghraouioumaima0@gmail.com', 'Tunis');
+INSERT INTO demo (id,name,description,price,stock) VALUES
+    ('1', 'ouma', 'demo-test-vid','100','12');

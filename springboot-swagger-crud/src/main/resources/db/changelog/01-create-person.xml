@@ -7,7 +7,6 @@
        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet id="1" author="oumaima">
-
         <createTable tableName="person">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
@@ -17,7 +16,6 @@
         </createTable>
         <rollback>
             <dropTable tableName="person"/>
-
         </rollback>
     </changeSet>
     <changeSet id="2-tag-person" author="oumaima" runAlways="true">

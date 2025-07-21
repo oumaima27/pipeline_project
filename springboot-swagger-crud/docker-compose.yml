@@ -20,7 +20,7 @@ services:
       - mysql_data:/var/lib/mysql
 
   app:
-    image: oumaimamaghraoui27/yourapp:1.0.48
+    image: oumaimamaghraoui27/yourapp:1.0.49
     depends_on:
       db:
         condition: service_healthy
